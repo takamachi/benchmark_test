@@ -32,6 +32,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <string.h>
+//#include <asm/cacheflush.h> 
 
 # include <unistd.h>
 # include <pwd.h>
@@ -41,6 +45,22 @@
 #include "sgx_uae_service.h"
 #include "App.h"
 #include "Enclave_u.h"
+
+typedef unsigned long long cycles_t;
+
+inline unsigned long long GetNTime(void)
+{
+    unsigned long long tsc;
+    __asm__ __volatile__(
+        "rdtscp;"
+        "shl $32, %%rdx;"
+        "or %%rdx, %%rax"
+        : "=a"(tsc)
+        :
+        : "%rcx", "%rdx");
+
+    return tsc;
+}
 
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
@@ -239,6 +259,9 @@ int SGX_CDECL main(int argc, char *argv[])
     (void)(argc);
     (void)(argv);
 
+    cycles_t t1, t2;
+
+
 
     /* Initialize the enclave */
     if(initialize_enclave() < 0){
@@ -246,13 +269,28 @@ int SGX_CDECL main(int argc, char *argv[])
         getchar();
         return -1; 
     }
- 
     
-    /* Utilize trusted libraries */ 
+    // for(int i=0 ; i<20000; i++){
+
+    //     //cacheflush(DCACHE);
+    //     system("sudo /home/zhazha/Project/SGX/benchmark_test/cacheclean.sh");
+
+
+    //     t1 = GetNTime(); 
+    //     //printf("%lld\n", t1);
+
+    //     /* Utilize trusted libraries */ 
     ecall_libcxx_functions();
-    
-    /* Destroy the enclave */
+
+    //     t2 = GetNTime();
+    //     // printf("%lld\n", t2);
+    //     printf("clock count : %lld\n", (t2-t1));
+    //  }       
+        /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
+
+
+
     
     printf("Info: Cxx11DemoEnclave successfully returned.\n");
 

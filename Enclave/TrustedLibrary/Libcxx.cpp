@@ -44,6 +44,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <map>
+#include <sys/types.h>
+// #include <sys/syscall.h>
+#include <string.h>
 
 #include "../Enclave.h"
 #include "Enclave_t.h"
@@ -51,7 +54,24 @@
 
 // Feature name        : Lambda functions
 // Feature description : It is used to create a function object that can capture variables in scope.
-// Demo description    : Shows lambda capture options and a some basic usages.
+// Demo description    : Shows lambda capture options and a some basic usages.\
+
+// typedef unsigned long long cycles_t;
+
+// inline unsigned long long GetNTime(void)
+// {
+//     unsigned long long tsc;
+//     __asm__ __volatile__(
+//         "rdtscp;"
+//         "shl $32, %%rdx;"
+//         "or %%rdx, %%rax"
+//         : "=a"(tsc)
+//         :
+//         : "%rcx", "%rdx");
+
+//     return tsc;
+// }
+
 void ecall_lambdas_demo()
 {
     // Lambdas capture options:
@@ -918,5 +938,46 @@ void ecall_condition_variable_load()
 
 void ecall_easiest_benchmark_run()
 {
-    printf("i just want to test.\n");
+    //printf("i just want to test.\n");
+}
+
+void ecall_array_in(int buffer[500])
+{
+    // printf("i am success hhh \n");
+}
+
+void ecall_array_out(int buffer[500])
+{
+    //printf("i am out \n");
+
+}
+
+void ecall_array_in_out(int buffer[500])
+{
+    //printf("i am in&out \n");
+
+}
+
+void ecall_callmyocall(void)
+{
+
+    //char* a = "Hello world";
+    sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+
+    // cycles_t t1, t2;
+
+    // for(int i=0; i<20000; i++)
+    // {
+
+    //     t1 = GetNTime(); 
+    ret = ocall_easiestocall();
+    // t2 = GetNTime();
+
+    // printf("clock count : %lld\n", (t2-t1));
+
+    if (ret != SGX_SUCCESS)
+    abort();
+
+    // }
+    
 }

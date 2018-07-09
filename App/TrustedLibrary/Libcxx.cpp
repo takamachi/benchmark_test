@@ -33,11 +33,28 @@
 #include "../App.h"
 #include "Enclave_u.h"
 #include <thread>
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <string.h>
 
 /* ecall_libcxx_functions:
  *   Invokes standard C++11 functions.
  */
+typedef unsigned long long cycles_t;
 
+inline unsigned long long GetNTime(void)
+{
+    unsigned long long tsc;
+    __asm__ __volatile__(
+        "rdtscp;"
+        "shl $32, %%rdx;"
+        "or %%rdx, %%rax"
+        : "=a"(tsc)
+        :
+        : "%rcx", "%rdx");
+
+    return tsc;
+}
  //This function is part of mutex demo
 void demo_counter_without_mutex()
 {
@@ -72,6 +89,33 @@ void demo_cond_var_load()
     ret = ecall_condition_variable_load(global_eid);
     if (ret != SGX_SUCCESS)
         abort();
+}
+
+void ocall_pointer_in(int* val)
+{
+    // *val = 1234;
+    //printf("i am ocallin\n");
+}
+
+/* ocall_pointer_out:
+ *   The OCALL declared with [out].
+ */
+void ocall_pointer_out(int* val)
+{
+    // *val = 1234;
+}
+
+/* ocall_pointer_in_out:
+ *   The OCALL declared with [in, out].
+ */
+void ocall_pointer_in_out(int* val)
+{
+    // *val = 1234;
+}
+
+void ocall_easiestocall(void)
+{
+    // printf("i am success\n");
 }
 
 // Examples for C++11 library and compiler features
@@ -207,9 +251,32 @@ void ecall_libcxx_functions(void)
 //     std::thread th2(demo_cond_var_load);
 //     th2.join();
 //     th1.join();
+    cycles_t t1, t2;
+    int buffer[500];
+    for(int i=0; i<500; i++)
+    {
+        buffer[i] = 0;
+    }
 
-    ret = ecall_easiest_benchmark_run(global_eid);
-    if (ret != SGX_SUCCESS)
+    for(int i=0; i<20000; i++)
+    {
+
+        system("sudo /home/zhazha/Project/SGX/benchmark_test/cacheclean.sh");
+
+        t1 = GetNTime(); 
+
+        // ret = ecall_array_in_out(global_eid, buffer);
+        ret = ecall_callmyocall(global_eid);
+        t2 = GetNTime();
+
+        printf("clock count : %lld\n", (t2-t1));
+        if (ret != SGX_SUCCESS)
         abort();
+    }
+
+    
+    // if (ret != SGX_SUCCESS)
+    //     abort();
+
 }
 
